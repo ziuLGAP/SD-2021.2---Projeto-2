@@ -1,0 +1,54 @@
+LIBRARY ieee ;
+use ieee.std_logic_1164.all ;
+USE ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
+
+ENTITY control IS
+PORT ( CLI,NCLI,SENHAADD,SENSOR,FRONT,INSIRA,BACK,NOTA1,NOTA2: IN STD_LOGIC;
+RE,CO: IN STD_LOGIC_VECTOR(3 DOWNTO 0) ;
+SENHAREGISTER, REGISTERRESET, ABRIR, CLK, RFLP, D1 : OUT STD_LOGIC;
+FALTA,PAGAR     : OUT STD_LOGIC_VECTOR(3 DOWNTO 0) 
+) ;
+END control ;
+ARCHITECTURE Behavior OF control IS
+SIGNAL A,B,C,D,E,F,G,H,J,K : STD_LOGIC  ;
+SIGNAL EXT1,EXT2 : STD_LOGIC_VECTOR(3 DOWNTO 0);
+SIGNAL REG,FALTA1,I : STD_LOGIC_VECTOR(3 downto 0) ;
+BEGIN
+A <= NCLI AND FRONT;
+B <= CLI AND FRONT;
+SENHAREGISTER <= ((NOT A) AND B) AND SENHAADD;
+C <= '1' WHEN RE = "0101" ELSE '0';
+D <= (CO(0) AND CO(1)) AND C;
+E <= (NOT C) AND (CO(3) AND CO(2));
+F <= (NOT NOTA1) AND NOTA2;
+G <= ((NOTA1 OR NOTA2) AND INSIRA) AND (NOT K);
+H <= D AND (NOT (NCLI OR E));
+EXT1(0) <= H AND B;
+EXT1(1) <= H AND B;
+EXT1(2) <= H AND B;
+EXT1(3) <= H AND B;
+EXT2(0) <= (NCLI OR E) AND (A OR B);
+EXT2(1) <= (NCLI OR E) AND (A OR B);
+EXT2(2) <= (NCLI OR E) AND (A OR B);
+EXT2(3) <= (NCLI OR E) AND (A OR B);
+I <= (EXT2 AND "0111") OR (EXT1 AND "0101");
+    PROCESS(G,NOTA1,NOTA2,BACK)
+    BEGIN
+    IF BACK = '1' then
+        REG <= "0000";
+    ELSIF rising_edge(G) AND NOTA1 = '1' then
+        REG <= REG + 1;
+    ELSIF rising_edge(G) AND NOTA2 = '1' then
+        REG <= REG + 2;
+    END IF;
+    END PROCESS;
+K <= '1' WHEN ((REG = I) AND I > "0000") OR REG > I ELSE '0';
+ABRIR <= (A OR B) AND K;
+PAGAR <= I;
+FALTA <= I - REG;
+REGISTERRESET <= E OR BACK;
+CLK <= (NOT ((A OR B) AND K)) AND SENSOR;
+D1 <= SENSOR;
+RFLP <= BACK;
+END Behavior ;
